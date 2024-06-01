@@ -1,5 +1,5 @@
 Pillow==9.3.0
-mysql-connector-python-rf
+mysql-connector-python==8.0.33
 numpy==1.26.0
 scikit-learn==1.4.0
 streamlit==1.33.0
