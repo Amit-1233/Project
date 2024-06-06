@@ -5,14 +5,15 @@ import os
 
 # Connect to MySQL database
 def create_connection():
+    db_config = st.secrets["connections"]["mysql"]
     conn = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="Amit12345678@",
-        database="users"
+        host=db_config["host"],
+        user=db_config["username"],
+        password=db_config["password"],
+        database=db_config["database"],
+        port=db_config["port"]
     )
     return conn
-
 # Create a new user
 def create_user(username, email, password):
     conn = create_connection()

@@ -15,11 +15,13 @@ from numpy.linalg import norm
 
 
 def create_connection():
+    db_config = st.secrets["connections"]["mysql"]
     conn = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="Amit12345678@",
-        database="users"
+        host=db_config["host"],
+        user=db_config["username"],
+        password=db_config["password"],
+        database=db_config["database"],
+        port=db_config["port"]
     )
     return conn
 
