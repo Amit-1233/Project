@@ -221,3 +221,6 @@ def fashion_recommender(show_history=False):
                         st.image(recommended_image_path, use_column_width=True, caption=f"Recommendation {i+1}")
                     else:
                         st.warning(f"Recommended image {i+1} not found.")
+
+# Run the fashion recommender system
+fashion_recommender(show_history=True)
