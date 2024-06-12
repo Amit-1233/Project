@@ -80,6 +80,7 @@ def recommend(features, feature_list):
     return indices
 
 # Fashion Recommender System function
+# Fashion Recommender System function
 def fashion_recommender(show_history=False):
     st.title('Fashion Recommender System')
 
@@ -99,7 +100,7 @@ def fashion_recommender(show_history=False):
             st.image(display_image, caption='Uploaded Image', use_column_width=True)
 
             # Extract features and get recommendations
-            features = feature_extraction(os.path.join("uploads", uploaded_file.name), model)
+            features = feature_extraction(uploaded_file, model)
 
             # Get recommendations based on the latest search
             indices_latest = recommend(features, feature_list)
@@ -131,8 +132,8 @@ def fashion_recommender(show_history=False):
                             else:
                                 recommended_image_path = filenames[indices_second_latest[0][i - 3]]
 
-                            # Replace local path with GitHub URL
-                            github_url = "https://raw.githubusercontent.com/your_username/your_repository/main/"
+                            # Use the provided GitHub URL
+                            github_url = "https://raw.githubusercontent.com/Amit-1233/Project/main/images/"
                             recommended_image_url = github_url + recommended_image_path
                             
                             st.image(recommended_image_url, use_column_width=True, caption=f"Recommendation {i+1}")
@@ -145,8 +146,8 @@ def fashion_recommender(show_history=False):
                         with col:
                             recommended_image_path = filenames[indices_latest[0][i]]
 
-                            # Replace local path with GitHub URL
-                            github_url = "https://github.com/Amit-1233/Project/images"
+                            # Use the provided GitHub URL
+                            github_url = "https://raw.githubusercontent.com/Amit-1233/Project/main/images/"
                             recommended_image_url = github_url + recommended_image_path
 
                             st.image(recommended_image_url, use_column_width=True, caption=f"Recommendation {i+1}")
@@ -159,8 +160,8 @@ def fashion_recommender(show_history=False):
                         if i < len(indices_latest[0]):
                             recommended_image_path = filenames[indices_latest[0][i]]
 
-                            # Replace local path with GitHub URL
-                            github_url = "https://github.com/Amit-1233/Project/images"
+                            # Use the provided GitHub URL
+                            github_url = "https://raw.githubusercontent.com/Amit-1233/Project/main/images/"
                             recommended_image_url = github_url + recommended_image_path
 
                             st.image(recommended_image_url, use_column_width=True, caption=f"Recommendation {i+1}")
