@@ -11,6 +11,9 @@ from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input
 from sklearn.neighbors import NearestNeighbors
 from numpy.linalg import norm
 
+
+
+
 def create_connection():
     db_config = st.secrets["connections"]["mysql"]
     conn = mysql.connector.connect(
@@ -22,18 +25,18 @@ def create_connection():
     )
     return conn
 
+
 # Save uploaded file and its features to the database
 def save_uploaded_file(uploaded_file, user_id, model):
     try:
         # Save the uploaded file to a directory
         if not os.path.exists('uploads'):
             os.makedirs('uploads')
-        file_path = os.path.join('uploads', uploaded_file.name)
-        with open(file_path, 'wb') as f:
+        with open(os.path.join('uploads', uploaded_file.name), 'wb') as f:
             f.write(uploaded_file.getbuffer())
         
         # Extract features
-        features = feature_extraction(file_path, model)
+        features = feature_extraction(os.path.join("uploads", uploaded_file.name), model)
 
         # Connect to database
         conn = create_connection()
@@ -124,17 +127,15 @@ def fashion_recommender(show_history=False):
                     for i, col in enumerate(cols):
                         with col:
                             if i < 3:
-                                recommended_image_path = os.path.normpath(filenames[indices_latest[0][i]])
+                                recommended_image_path = filenames[indices_latest[0][i]]
                             else:
-                                recommended_image_path = os.path.normpath(filenames[indices_second_latest[0][i - 3]])
+                                recommended_image_path = filenames[indices_second_latest[0][i - 3]]
 
-                            # Debug: print the recommended image path
-                            st.text(f"Path: {recommended_image_path}")
-
-                            if os.path.exists(recommended_image_path):
-                                st.image(recommended_image_path, use_column_width=True, caption=f"Recommendation {i+1}")
-                            else:
-                                st.warning(f"Recommended image {i+1} not found.")
+                            # Replace local path with GitHub URL
+                            github_url = "https://raw.githubusercontent.com/your_username/your_repository/main/"
+                            recommended_image_url = github_url + recommended_image_path
+                            
+                            st.image(recommended_image_url, use_column_width=True, caption=f"Recommendation {i+1}")
                 else:
                     # Only one search history available, show 5 recommendations
                     st.info("Insufficient search history to provide recommendations from both searches.")
@@ -142,14 +143,13 @@ def fashion_recommender(show_history=False):
                     cols = st.columns(5)
                     for i, col in enumerate(cols):
                         with col:
-                            recommended_image_path = os.path.normpath(filenames[indices_latest[0][i]])
-                            # Debug: print the recommended image path
-                            st.text(f"Path: {recommended_image_path}")
+                            recommended_image_path = filenames[indices_latest[0][i]]
 
-                            if os.path.exists(recommended_image_path):
-                                st.image(recommended_image_path, use_column_width=True, caption=f"Recommendation {i+1}")
-                            else:
-                                st.warning(f"Recommended image {i+1} not found.")
+                            # Replace local path with GitHub URL
+                            github_url = "https://github.com/Amit-1233/Project/images"
+                            recommended_image_url = github_url + recommended_image_path
+
+                            st.image(recommended_image_url, use_column_width=True, caption=f"Recommendation {i+1}")
             else:
                 # Display recommendations only from the latest search
                 st.subheader("Recommended Products:")
@@ -157,70 +157,12 @@ def fashion_recommender(show_history=False):
                 for i, col in enumerate(cols):
                     with col:
                         if i < len(indices_latest[0]):
-                            recommended_image_path = os.path.normpath(filenames[indices_latest[0][i]])
-                            # Debug: print the recommended image path
-                            st.text(f"Path: {recommended_image_path}")
+                            recommended_image_path = filenames[indices_latest[0][i]]
 
-                            if os.path.exists(recommended_image_path):
-                                st.image(recommended_image_path, use_column_width=True, caption=f"Recommendation {i+1}")
-                            else:
-                                st.warning(f"Recommended image {i+1} not found.")
+                            # Replace local path with GitHub URL
+                            github_url = "https://github.com/Amit-1233/Project/images"
+                            recommended_image_url = github_url + recommended_image_path
+
+                            st.image(recommended_image_url, use_column_width=True, caption=f"Recommendation {i+1}")
         else:
             st.header("Some error occurred in file upload")
-
-    elif show_history:
-        # Show recommendations from search history if specified, without uploading a new image
-        user_id = st.session_state.user_id
-        conn = create_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT features, image_path FROM user_images WHERE user_id = %s ORDER BY id DESC LIMIT 2", (user_id,))
-        user_data = cursor.fetchall()
-        cursor.close()
-        conn.close()
-
-        if len(user_data) == 2:
-            user_features_latest = pickle.loads(user_data[0][0])
-            user_features_second_latest = pickle.loads(user_data[1][0])
-
-            # Get recommendations for the latest search
-            indices_latest = recommend(user_features_latest, feature_list)
-
-            # Get recommendations for the second latest search
-            indices_second_latest = recommend(user_features_second_latest, feature_list)
-
-            # Display recommendations from both searches
-            st.subheader("Based on your recent activity:")
-            cols = st.columns(6)
-            for i, col in enumerate(cols):
-                with col:
-                    if i < 3:
-                        recommended_image_path = os.path.normpath(filenames[indices_latest[0][i]])
-                    else:
-                        recommended_image_path = os.path.normpath(filenames[indices_second_latest[0][i - 3]])
-
-                    # Debug: print the recommended image path
-                    st.text(f"Path: {recommended_image_path}")
-
-                    if os.path.exists(recommended_image_path):
-                        st.image(recommended_image_path, use_column_width=True, caption=f"Recommendation {i+1}")
-                    else:
-                        st.warning(f"Recommended image {i+1} not found.")
-        elif len(user_data) == 1:
-            # Only one search history available, show 5 recommendations
-            user_features_latest = pickle.loads(user_data[0][0])
-            indices_latest = recommend(user_features_latest, feature_list)
-            st.subheader("Based on your recent activity:")
-            cols = st.columns(5)
-            for i, col in enumerate(cols):
-                with col:
-                    recommended_image_path = os.path.normpath(filenames[indices_latest[0][i]])
-                    # Debug: print the recommended image path
-                    st.text(f"Path: {recommended_image_path}")
-
-                    if os.path.exists(recommended_image_path):
-                        st.image(recommended_image_path, use_column_width=True, caption=f"Recommendation {i+1}")
-                    else:
-                        st.warning(f"Recommended image {i+1} not found.")
-
-# Run the fashion recommender system
-fashion_recommender(show_history=True)
