@@ -80,7 +80,6 @@ def recommend(features, feature_list):
     return indices
 
 # Fashion Recommender System function
-# Fashion Recommender System function
 def fashion_recommender(show_history=False):
     st.title('Fashion Recommender System')
 
@@ -100,7 +99,7 @@ def fashion_recommender(show_history=False):
             st.image(display_image, caption='Uploaded Image', use_column_width=True)
 
             # Extract features and get recommendations
-            features = feature_extraction(uploaded_file, model)
+            features = feature_extraction(os.path.join("uploads", uploaded_file.name), model)
 
             # Get recommendations based on the latest search
             indices_latest = recommend(features, feature_list)
@@ -132,11 +131,10 @@ def fashion_recommender(show_history=False):
                             else:
                                 recommended_image_path = filenames[indices_second_latest[0][i - 3]]
 
-                            # Use the provided GitHub URL
-                            github_url = "https://raw.githubusercontent.com/Amit-1233/Project/main/images/"
-                            recommended_image_url = github_url + recommended_image_path
-                            
-                            st.image(recommended_image_url, use_column_width=True, caption=f"Recommendation {i+1}")
+                            if os.path.exists(recommended_image_path):
+                                st.image(recommended_image_path, use_column_width=True, caption=f"Recommendation {i+1}")
+                            else:
+                                st.warning(f"Recommended image {i+1} not found.")
                 else:
                     # Only one search history available, show 5 recommendations
                     st.info("Insufficient search history to provide recommendations from both searches.")
@@ -145,12 +143,10 @@ def fashion_recommender(show_history=False):
                     for i, col in enumerate(cols):
                         with col:
                             recommended_image_path = filenames[indices_latest[0][i]]
-
-                            # Use the provided GitHub URL
-                            github_url = "https://raw.githubusercontent.com/Amit-1233/Project/main/images/"
-                            recommended_image_url = github_url + recommended_image_path
-
-                            st.image(recommended_image_url, use_column_width=True, caption=f"Recommendation {i+1}")
+                            if os.path.exists(recommended_image_path):
+                                st.image(recommended_image_path, use_column_width=True, caption=f"Recommendation {i+1}")
+                            else:
+                                st.warning(f"Recommended image {i+1} not found.")
             else:
                 # Display recommendations only from the latest search
                 st.subheader("Recommended Products:")
@@ -159,11 +155,57 @@ def fashion_recommender(show_history=False):
                     with col:
                         if i < len(indices_latest[0]):
                             recommended_image_path = filenames[indices_latest[0][i]]
-
-                            # Use the provided GitHub URL
-                            github_url = "https://raw.githubusercontent.com/Amit-1233/Project/main/images/"
-                            recommended_image_url = github_url + recommended_image_path
-
-                            st.image(recommended_image_url, use_column_width=True, caption=f"Recommendation {i+1}")
+                            if os.path.exists(recommended_image_path):
+                                st.image(recommended_image_path, use_column_width=True, caption=f"Recommendation {i+1}")
+                            else:
+                                st.warning(f"Recommended image {i+1} not found.")
         else:
             st.header("Some error occurred in file upload")
+
+    elif show_history:
+        # Show recommendations from search history if specified, without uploading a new image
+        user_id = st.session_state.user_id
+        conn = create_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT features, image_path FROM user_images WHERE user_id = %s ORDER BY id DESC LIMIT 2", (user_id,))
+        user_data = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        if len(user_data) == 2:
+            user_features_latest = pickle.loads(user_data[0][0])
+            user_features_second_latest = pickle.loads(user_data[1][0])
+
+            # Get recommendations for the latest search
+            indices_latest = recommend(user_features_latest, feature_list)
+
+            # Get recommendations for the second latest search
+            indices_second_latest = recommend(user_features_second_latest, feature_list)
+
+            # Display recommendations from both searches
+            st.subheader("Based on your recent activity:")
+            cols = st.columns(6)
+            for i, col in enumerate(cols):
+                with col:
+                    if i < 3:
+                        recommended_image_path = filenames[indices_latest[0][i]]
+                    else:
+                        recommended_image_path = filenames[indices_second_latest[0][i - 3]]
+
+                    if os.path.exists(recommended_image_path):
+                        st.image(recommended_image_path, use_column_width=True, caption=f"Recommendation {i+1}")
+                    else:
+                        st.warning(f"Recommended image {i+1} not found.")
+        elif len(user_data) == 1:
+            # Only one search history available, show 5 recommendations
+            user_features_latest = pickle.loads(user_data[0][0])
+            indices_latest = recommend(user_features_latest, feature_list)
+            st.subheader("Based on your recent activity:")
+            cols = st.columns(5)
+            for i, col in enumerate(cols):
+                with col:
+                    recommended_image_path = filenames[indices_latest[0][i]]
+                    if os.path.exists(recommended_image_path):
+                        st.image(recommended_image_path, use_column_width=True, caption=f"Recommendation {i+1}")
+                    else:
+                        st.warning(f"Recommended image {i+1} not found.")
