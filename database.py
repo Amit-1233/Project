@@ -4,7 +4,7 @@ import pickle
 import os
 
 def create_connection():
-    db_config = st.secrets["connections"]["mysql"]
+    db_config = st.secrets["mysql"]
     conn = mysql.connector.connect(
         host=db_config["host"],
         user=db_config["username"],
